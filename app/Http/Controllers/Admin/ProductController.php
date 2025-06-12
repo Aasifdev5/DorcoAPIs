@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Subcategory;
 use App\Models\User;
+use App\Imports\ProductsImport; // Import the Import class
+use Maatwebsite\Excel\Facades\Excel; // Import Excel facade for Excel handling
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
@@ -32,6 +34,24 @@ class ProductController extends Controller {
 
         $products = Product::with('category')->get();
         return view('admin.products.index', compact('products', 'user_session'));
+    }
+    public function showImportForm()
+    {
+        if (Session::has('LoggedIn')) {
+            $user_session = User::where('id', Session::get('LoggedIn'))->first();
+            return view('admin.products.product_import', compact('user_session'));
+        }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv',
+        ]);
+
+        Excel::import(new ProductsImport(), $request->file('file'));
+
+        return redirect()->back()->with('success', 'Productos importados exitosamente.');
     }
     public function getSubcategories($category_id)
     {

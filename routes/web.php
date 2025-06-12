@@ -134,7 +134,7 @@ Route::get('/error/{code}', function ($code) {
 
 Route::post('/log', [UserController::class, 'login'])->name('login');
 Route::group(['middleware' => ['prevent-back-history', SetLocale::class]], function () {
-    Route::get('/', [UserController::class, 'home'])->name('home');
+    // Route::get('/', [UserController::class, 'home'])->name('home');
     Route::get('/index', [UserController::class, 'home'])->name('home');
     Route::get('/local/{ln}', function ($ln) {
         return redirect()->back()->with('local', $ln);
@@ -532,7 +532,20 @@ Route::group(['prefix' => 'admin', 'middleware' => ['check.session', 'super.admi
             Route::get('delete/{id}', [MediaController::class, 'delete'])->name('gallery.delete');
             Route::post('bulk-delete', [MediaController::class, 'bulkDelete'])->name('gallery.bulk.delete');
         });
+        //Import
+        Route::get('/import', [ProductController::class, 'showImportForm'])->name('import');
+        Route::post('/import', [ProductController::class, 'import'])->name('products.import');
 
+        //Download Sample
+        Route::get('/download-sample-file', function () {
+            $file = public_path('dummy_products.xlsx');
+            $headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ];
+            $fileName = 'products.xlsx';
+
+            return response()->download($file, $fileName, $headers);
+        })->name('download.sample.file');
         Route::group(['prefix' => 'blog', 'as' => 'blog.'], function () {
             Route::get('/', [BlogController::class, 'index'])->name('index')->middleware('AdminIsLoggedIn');
             Route::get('create', [BlogController::class, 'create'])->name('create')->middleware('AdminIsLoggedIn');
@@ -601,10 +614,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['check.session', 'super.admi
         Route::post('sendMail/{id}', [EmailAppController::class, 'sendMail'])->name('sendMail');
         Route::get('email-compose', [EmailAppController::class, 'compose'])->name('compose')->middleware('AdminIsLoggedIn');
     });
-
 });
 // Public routes (accessible without authentication)
 Route::get('/admin/login', [Admin::class, 'admin'])->name('admin')->middleware('AdminAlreadyLoggedIn');
+Route::get('/', [Admin::class, 'admin'])->name('admin')->middleware('AdminAlreadyLoggedIn');
 Route::post('/admin/log', [Admin::class, 'login'])->name('login');
 Route::get('/admin/forget_password', [Admin::class, 'forget_password'])->name('forget_password');
 Route::post('/admin/unlocked', [Admin::class, 'unlocked'])->name('unlocked');

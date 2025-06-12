@@ -4,7 +4,8 @@
 <div class="container">
     <h2>Product List</h2>
     <a href="{{ route('products.create') }}" class="btn btn-success pull-right">Add Product</a>
-
+ <a href="{{ url('admin\import') }}" class="btn btn-primary btn-form pull-left"><i
+                                                        class="fa fa-plus"></i> {{ __('Importar productos') }}</a>
     <form id="bulk-delete-form">
         @csrf
         @method('DELETE')
