@@ -24,10 +24,12 @@ class CategoryController extends Controller
     {
         $this->model = new Crud($category);
     }
-    public function categories() {
+    public function categories()
+    {
         return response()->json(Category::all());
     }
-    public function subcategories($category) {
+    public function subcategories($category)
+    {
         return response()->json(Subcategory::where('parent_category_id', $category)->paginate(10));
     }
     public function index()
@@ -113,48 +115,48 @@ class CategoryController extends Controller
 
     public function update(Request $request, $uuid)
     {
+        try {
+            $category = $this->model->getRecordByUuid($uuid);
+            if (!$category) {
+                return response()->json(['success' => false, 'message' => 'Category not found.'], 404);
+            }
 
-        $category = $this->model->getRecordByUuid($uuid);
-        $image = $category->image;
-        if ($request->hasFile('image')) {
-            $this->deleteFile($category->image);
-            // Handle new image upload
-            $attribute = $request->file('image');
-            $destination = 'category';
+            $image = $category->image;
+            if ($request->hasFile('image')) {
+                $this->deleteFile($category->image);
+                $attribute = $request->file('image');
+                $destination = 'category';
+                $file_name = time() . '-' . Str::random(10) . '.' . $attribute->getClientOriginalExtension();
+                $attribute->move(public_path('uploads/' . $destination), $file_name);
+                $image = 'Uploads/' . $destination . '/' . $file_name;
+            }
 
-            // Generate unique filename
-            $file_name = time() . '-' . Str::random(10) . '.' . $attribute->getClientOriginalExtension();
-            // Move uploaded file to the destination directory
-            $attribute->move(public_path('uploads/' . $destination), $file_name);
-            // Update image path
-            $image = 'uploads/' . $destination . '/' . $file_name;
+            $data = [
+                'name' => $request->name,
+                'is_feature' => $request->is_feature ? 'yes' : 'no',
+                'slug' => Str::slug($request->name), // Use Str::slug instead of getSlug
+                'image' => $image,
+                'meta_title' => $request->meta_title,
+                'meta_description' => $request->meta_description,
+                'meta_keywords' => $request->meta_keywords,
+            ];
+
+            if ($request->hasFile('og_image')) {
+                $this->deleteFile($category->og_image);
+                $attribute = $request->file('og_image');
+                $destination = 'meta';
+                $file_name = time() . '-' . Str::random(10) . '.' . $attribute->getClientOriginalExtension();
+                $attribute->move(public_path('uploads/' . $destination), $file_name);
+                $data['og_image'] = 'Uploads/' . $destination . '/' . $file_name;
+            }
+
+            $this->model->updateByUuid($data, $uuid);
+
+            return response()->json(['success' => true, 'message' => 'Category updated successfully.']);
+        } catch (\Exception $e) {
+            \Log::error('Error updating category: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error updating category: ' . $e->getMessage()], 500);
         }
-
-        $data = [
-            'name' => $request->name,
-            'is_feature' => $request->is_feature ? 'yes' : 'no',
-            'slug' => getSlug($request->name),
-            'image' => $image,
-            'meta_title' => $request->meta_title,
-            'meta_description' => $request->meta_description,
-            'meta_keywords' => $request->meta_keywords,
-        ];
-
-        // Handle OG image upload
-        if ($request->hasFile('og_image')) {
-            $attribute = $request->file('og_image');
-            $destination = 'meta';
-
-            // Generate unique filename
-            $file_name = time() . '-' . Str::random(10) . '.' . $attribute->getClientOriginalExtension();
-            // Move uploaded file to the destination directory
-            $attribute->move(public_path('uploads/' . $destination), $file_name);
-            // Update og_image path
-            $data['og_image'] = 'uploads/' . $destination . '/' . $file_name;
-        }
-
-        $this->model->updateByUuid($data, $uuid); // update category
-        return response()->json(['success' => true]);
     }
 
     public function delete($uuid)
@@ -167,30 +169,40 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Category deleted successfully.']);
     }
     public function bulkDelete(Request $request)
     {
         try {
-            // Validate that IDs are provided
             $request->validate([
                 'ids' => 'required|array',
-                'ids.*' => 'exists:categories,uuid' // Ensure each ID exists in the categories table
+                'ids.*' => 'exists:categories,uuid'
             ]);
 
-            // Delete categories based on UUIDs provided in the request
-            Category::whereIn('uuid', $request->ids)->delete();
+            $deleted = Category::whereIn('uuid', $request->ids)->delete();
 
-            // Return a JSON response indicating success
-            return response()->json([
-                'success' => true,
-                'message' => 'Categorías eliminadas correctamente.'
-            ]);
-        } catch (\Exception $e) {
-            // Return an error response if something goes wrong
+            if ($deleted) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Categorías eliminadas correctamente.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontraron categorías para eliminar.'
+                ], 404);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar las categorías seleccionadas.'
+                'message' => 'IDs inválidos proporcionados.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error bulk deleting categories: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar las categorías seleccionadas: ' . $e->getMessage()
             ], 500);
         }
     }

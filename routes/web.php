@@ -506,7 +506,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['check.session', 'super.admi
             Route::post('store', [CategoryController::class, 'store'])->name('category.store');
             Route::get('edit/{uuid}', [CategoryController::class, 'edit'])->name('category.edit')->middleware('AdminIsLoggedIn');
             Route::post('update/{uuid}', [CategoryController::class, 'update'])->name('category.update');
-            Route::get('delete/{uuid}', [CategoryController::class, 'delete'])->name('category.delete');
+            Route::delete('delete/{uuid}', [CategoryController::class, 'delete'])->name('category.delete');
             Route::post('bulk-delete', [CategoryController::class, 'bulkDelete'])->name('category.bulk.delete');
         });
 

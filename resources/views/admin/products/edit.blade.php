@@ -1,5 +1,7 @@
 @extends('layout.master')
-
+@section('title')
+    Edit Product
+@endsection
 @section('main_content')
 <div class="container">
     <h2>Edit Product</h2>
@@ -56,7 +58,10 @@
                 <img src="{{ asset($product->image) }}" alt="Product Image" width="100" class="mt-2">
             @endif
         </div>
-
+<div class="mb-3">
+            <label for="name" class="form-label">Product Brand</label>
+            <input type="text" name="brand" class="form-control" value="{{ $product->brand }}">
+        </div>
         <button type="submit" class="btn btn-primary">Update Product</button>
         <a href="{{ route('products.list') }}" class="btn btn-secondary">Back</a>
     </form>

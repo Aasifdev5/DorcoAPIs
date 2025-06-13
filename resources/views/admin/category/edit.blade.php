@@ -139,37 +139,69 @@
         </div>
 
 
-    <!-- jQuery (required) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $('#Form').submit(function(e) {
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function () {
+        $('#Form').submit(function (e) {
             e.preventDefault();
 
-            let formData = new FormData(this); // Create FormData object
+            let formData = new FormData(this);
 
             $.ajax({
                 type: "POST",
                 url: "{{ route('category.update', [$category->uuid]) }}",
                 data: formData,
                 dataType: "json",
-                contentType: false, // Set contentType to false for file uploads
-                processData: false, // Set processData to false to prevent jQuery from automatically transforming the data
-                success: function(response) {
+                contentType: false,
+                processData: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (response) {
                     if (response.success) {
-                        toastr.success("Categoría actualizada correctamente.", "", {
-                            onHidden: function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: response.message || 'Categoría actualizada correctamente.',
+                            showConfirmButton: true,
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
                                 window.location.href = "{{ route('category.index') }}";
                             }
                         });
                     } else {
-                        toastr.error("No se pudo actualizar la categoría.");
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo actualizar la categoría.',
+                            confirmButtonText: 'OK'
+                        });
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr) {
                     console.error(xhr.responseText);
-                    toastr.error("No se pudo actualizar la categoría. Por favor, inténtelo de nuevo más tarde.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error del servidor',
+                        text: xhr.responseJSON?.message || 'No se pudo actualizar la categoría. Por favor, inténtelo de nuevo más tarde.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         });
-    </script>
+
+        // Image preview function
+        window.previewFile = function (input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    $(input).parent().find('img').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+    });
+</script>
 @endsection

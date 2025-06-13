@@ -1,5 +1,7 @@
 @extends('layout.master')
-
+@section('title')
+    Products
+@endsection
 @section('main_content')
 <div class="container">
     <h2>Product List</h2>
@@ -21,6 +23,7 @@
                 <th>Name</th>
                 <th>Category</th>
                 <th>Subcategory</th>
+                <th>Brand</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -32,6 +35,7 @@
                 <td>{{ $product->name }}</td>
                 <td>{{ $product->category->name ?? '—' }}</td>
                 <td>{{ $product->subcategory->name ?? '—' }}</td>
+                <td>{{ $product->brand ?? '—' }}</td>
                 <td>
                     <a href="{{ route('products.edit', $product->id) }}" class="btn btn-primary">Edit</a>
                     <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline delete-form">

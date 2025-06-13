@@ -95,6 +95,7 @@ class ProductController extends Controller {
             'name' => $request->name,
             'description' => $request->description,
             'image' => $image,
+            'brand' => $request->brand,
         ]);
 
         return redirect()->route('products.list')->with('success', 'Product added successfully');
@@ -136,6 +137,7 @@ class ProductController extends Controller {
             'name' => $request->name,
             'description' => $request->description,
             'image' => $product->image,
+            'brand' => $request->brand,
         ]);
 
         return redirect()->route('products.list')->with('success', 'Product updated successfully');

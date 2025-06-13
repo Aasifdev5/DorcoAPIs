@@ -1,5 +1,7 @@
 @extends('layout.master')
-
+@section('title')
+    Add Product
+@endsection
 @section('main_content')
 <div class="container">
     <h2>Add Product</h2>
@@ -49,7 +51,11 @@
             <label for="image" class="form-label">Product Image</label>
             <input type="file" name="image" class="form-control">
         </div>
-
+ {{-- Product Name --}}
+        <div class="mb-3">
+            <label for="name" class="form-label">Product Brand</label>
+            <input type="text" name="brand" class="form-control">
+        </div>
         {{-- Buttons --}}
         <button type="submit" class="btn btn-success">Add Product</button>
         <a href="{{ route('products.list') }}" class="btn btn-secondary">Back</a>
